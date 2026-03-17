@@ -90,36 +90,36 @@ export default function CheckinClient() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-stone-50">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass border-b border-white/60 px-5 py-4 flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-gray-400 active:text-gray-600 transition-colors text-[15px]">
-          ← Back
+      <header className="sticky top-0 z-10 glass border-b border-stone-200/50 px-5 py-4 flex items-center gap-3">
+        <button onClick={() => router.back()} className="text-stone-400 active:text-stone-600 transition-colors text-[14px] font-medium">
+          Cancel
         </button>
-        <h1 className="text-[17px] font-semibold text-gray-900 flex-1">New Check-in</h1>
+        <h1 className="text-[17px] font-bold text-stone-900 flex-1 text-center pr-10">New Check-in</h1>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 space-y-8">
+      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 space-y-7">
         {/* Place search */}
-        <div>
-          <label className="block text-[13px] font-medium text-gray-900 mb-2 tracking-wide">WHERE</label>
+        <div className="animate-fade-in-up">
+          <label className="section-label block mb-2.5">Where</label>
           <div className="relative">
             <input
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search restaurants, cafes, landmarks..."
-              className="w-full bg-gray-50 border-0 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/50 transition-shadow"
+              className="w-full bg-white border border-stone-200/80 rounded-2xl px-4 py-3.5 text-[15px] text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300 transition-all shadow-sm"
             />
             {suggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20">
+              <ul className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 overflow-hidden z-20">
                 {suggestions.map((s) => (
                   <li key={s.placeId}>
                     <button
                       onClick={() => handleSelectPlace(s)}
-                      className="w-full text-left px-4 py-3.5 active:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                      className="w-full text-left px-4 py-3.5 active:bg-stone-50 transition-colors border-b border-stone-50 last:border-0"
                     >
-                      <p className="text-[14px] font-medium text-gray-900">{s.mainText}</p>
-                      <p className="text-[12px] text-gray-400 mt-0.5">{s.secondaryText}</p>
+                      <p className="text-[14px] font-medium text-stone-900">{s.mainText}</p>
+                      <p className="text-[12px] text-stone-400 mt-0.5">{s.secondaryText}</p>
                     </button>
                   </li>
                 ))}
@@ -129,38 +129,34 @@ export default function CheckinClient() {
         </div>
 
         {/* Star rating */}
-        <div>
-          <label className="block text-[13px] font-medium text-gray-900 mb-3 tracking-wide">RATING</label>
-          <div className="flex gap-3">
+        <div className="animate-fade-in-up delay-50">
+          <label className="section-label block mb-3">Rating</label>
+          <div className="flex gap-2.5">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 onClick={() => setRating(n)}
-                className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all duration-200 active:scale-90 ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg transition-all duration-200 active:scale-90 ${
                   n <= rating
-                    ? "bg-amber-50 border border-amber-200"
-                    : "bg-gray-50 border border-gray-100"
+                    ? "bg-amber-50 border-2 border-amber-300 shadow-sm shadow-amber-100"
+                    : "bg-white border border-stone-200/80"
                 }`}
               >
-                ★
+                <span className={n <= rating ? "text-amber-500" : "text-stone-200"}>★</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Occasion */}
-        <div>
-          <label className="block text-[13px] font-medium text-gray-900 mb-3 tracking-wide">OCCASION</label>
+        <div className="animate-fade-in-up delay-100">
+          <label className="section-label block mb-3">Occasion</label>
           <div className="flex flex-wrap gap-2">
             {OCCASION_TAGS.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setOccasion(occasion === tag ? "" : tag)}
-                className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all duration-200 ${
-                  occasion === tag
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-50 text-gray-500 border border-gray-100"
-                }`}
+                className={`chip ${occasion === tag ? "chip-active" : "chip-inactive"}`}
               >
                 {tag}
               </button>
@@ -169,34 +165,36 @@ export default function CheckinClient() {
         </div>
 
         {/* Review */}
-        <div>
-          <label className="block text-[13px] font-medium text-gray-900 mb-2 tracking-wide">
-            REVIEW <span className="text-gray-300 font-normal">optional</span>
+        <div className="animate-fade-in-up delay-150">
+          <label className="section-label block mb-2.5">
+            Review <span className="text-stone-300 font-normal normal-case">optional</span>
           </label>
           <textarea
             value={review}
             onChange={(e) => setReview(e.target.value)}
             rows={3}
             placeholder="What made this place memorable?"
-            className="w-full bg-gray-50 border-0 rounded-xl px-4 py-3.5 text-[15px] text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/50 resize-none transition-shadow"
+            className="w-full bg-white border border-stone-200/80 rounded-2xl px-4 py-3.5 text-[15px] text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300 resize-none transition-all shadow-sm"
           />
         </div>
 
         {/* Photos */}
-        <div>
-          <label className="block text-[13px] font-medium text-gray-900 mb-3 tracking-wide">PHOTOS</label>
+        <div className="animate-fade-in-up delay-200">
+          <label className="section-label block mb-3">Photos</label>
           <div className="flex gap-3 flex-wrap">
             {photos.map((url) => (
-              <img key={url} src={url} alt="" className="w-20 h-20 rounded-xl object-cover" />
+              <img key={url} src={url} alt="" className="w-20 h-20 rounded-2xl object-cover border border-stone-100" />
             ))}
-            <label className="w-20 h-20 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer active:bg-gray-100 transition-colors">
-              <span className="text-xl text-gray-300">+</span>
+            <label className="w-20 h-20 rounded-2xl bg-white border-2 border-dashed border-stone-200 flex items-center justify-center cursor-pointer active:bg-stone-50 transition-colors">
+              <svg className="w-6 h-6 text-stone-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             </label>
           </div>
         </div>
 
-        {error && <p className="text-[13px] text-red-400 font-medium">{error}</p>}
+        {error && <p className="text-[13px] text-rose-500 font-medium">{error}</p>}
       </div>
 
       {/* Save */}
@@ -204,7 +202,7 @@ export default function CheckinClient() {
         <button
           onClick={handleSubmit}
           disabled={saving}
-          className="w-full py-4 rounded-xl bg-gray-900 text-white font-medium text-[15px] active:scale-[0.98] transition-all duration-200 disabled:opacity-40"
+          className="w-full py-4 rounded-2xl btn-brand text-[15px] disabled:opacity-40"
         >
           {saving ? "Saving..." : "Save Check-in"}
         </button>

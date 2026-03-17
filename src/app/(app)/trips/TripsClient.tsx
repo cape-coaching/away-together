@@ -38,14 +38,12 @@ export default function TripsClient({ userId }: { userId: string }) {
       .finally(() => setLoading(false));
   }, [filter]);
 
-  const filtered = itineraries;
-
   return (
-    <div className="pb-20 pt-2">
+    <div className="pb-20 pt-2 bg-stone-50 min-h-full">
       {/* Header */}
       <div className="px-5 pt-4 pb-3">
-        <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Trips</h1>
-        <p className="text-[13px] text-gray-400 mt-0.5">Your itineraries and city guides</p>
+        <h1 className="text-[22px] font-bold text-stone-900 tracking-tight">Trips</h1>
+        <p className="text-[13px] text-stone-400 mt-0.5">Your itineraries and city guides</p>
       </div>
 
       {/* Filter chips */}
@@ -54,11 +52,7 @@ export default function TripsClient({ userId }: { userId: string }) {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`text-[12px] font-medium px-3.5 py-1.5 rounded-full transition-all duration-200 ${
-              filter === f
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-500 active:bg-gray-200"
-            }`}
+            className={`chip ${filter === f ? "chip-active" : "chip-inactive"}`}
           >
             {f === "all" ? "All" : f === "draft" ? "Drafts" : "Published"}
           </button>
@@ -75,13 +69,16 @@ export default function TripsClient({ userId }: { userId: string }) {
       )}
 
       {/* Empty state */}
-      {!loading && filtered.length === 0 && (
+      {!loading && itineraries.length === 0 && (
         <div className="flex flex-col items-center justify-center pt-20 px-10 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-5">
-            <span className="text-3xl">🗺️</span>
+          <div className="w-16 h-16 rounded-3xl bg-stone-100 flex items-center justify-center mb-5">
+            <svg className="w-8 h-8 text-stone-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2C8 2 4 6 4 10c0 5.25 7 11.5 7.68 12.07a.5.5 0 0 0 .64 0C13 21.5 20 15.25 20 10c0-4-4-8-8-8z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No trips yet</h3>
-          <p className="text-sm text-gray-400 leading-relaxed">
+          <h3 className="text-lg font-semibold text-stone-900 mb-2">No trips yet</h3>
+          <p className="text-sm text-stone-400 leading-relaxed">
             Check in to places you love — high-rated spots automatically become city guides.
           </p>
         </div>
@@ -90,11 +87,12 @@ export default function TripsClient({ userId }: { userId: string }) {
       {/* Itinerary cards */}
       {!loading && (
         <div className="px-4 space-y-3">
-          {filtered.map((it, i) => (
+          {itineraries.map((it, i) => (
             <Link
               key={it.id}
               href={`/trips/${it.id}`}
-              className={`block animate-fade-in-up ${i > 0 ? `delay-${Math.min(i * 50, 300)}` : ""}`}
+              className="block animate-fade-in-up"
+              style={{ animationDelay: `${i * 60}ms` }}
             >
               <ItineraryCard itinerary={it} />
             </Link>
@@ -116,11 +114,11 @@ function ItineraryCard({ itinerary }: { itinerary: ItineraryListItem }) {
   const previewPhotos = previewItems.filter((p) => p.photo).slice(0, 3);
 
   return (
-    <article className="bg-white rounded-2xl border border-gray-100/80 overflow-hidden active:scale-[0.98] transition-transform duration-150">
+    <article className="card overflow-hidden card-hover">
       {/* Photo strip */}
       {previewPhotos.length > 0 && (
         <div className="flex h-[100px] overflow-hidden">
-          {previewPhotos.map((p, i) => (
+          {previewPhotos.map((p) => (
             <div key={p.id} className="flex-1 relative">
               <img
                 src={p.photo!}
@@ -128,9 +126,9 @@ function ItineraryCard({ itinerary }: { itinerary: ItineraryListItem }) {
                 className="w-full h-full object-cover"
               />
               {p.rating && (
-                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
-                  <span className="text-[10px]">★</span>
-                  <span className="text-[10px] font-semibold text-white">{p.rating}</span>
+                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 glass-dark px-1.5 py-0.5 rounded-lg">
+                  <span className="text-[10px] text-amber-400">★</span>
+                  <span className="text-[10px] font-bold text-white">{p.rating}</span>
                 </div>
               )}
             </div>
@@ -142,16 +140,16 @@ function ItineraryCard({ itinerary }: { itinerary: ItineraryListItem }) {
       <div className="px-4 py-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-[15px] font-semibold text-gray-900 truncate">{title}</h3>
-            <p className="text-[12px] text-gray-400 mt-0.5">
+            <h3 className="text-[15px] font-semibold text-stone-900 truncate">{title}</h3>
+            <p className="text-[12px] text-stone-400 mt-0.5">
               {destination} · {itemCount} {itemCount === 1 ? "place" : "places"} · {formattedDate}
             </p>
           </div>
           <span
-            className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
+            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
               visibility === "public"
-                ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                : "bg-gray-50 text-gray-400 border border-gray-100"
+                ? "score-high"
+                : "score-low"
             }`}
           >
             {visibility === "public" ? "Published" : "Draft"}
@@ -162,19 +160,22 @@ function ItineraryCard({ itinerary }: { itinerary: ItineraryListItem }) {
         {tags.length > 0 && tags[0] !== "auto" && (
           <div className="flex gap-1.5 mt-2.5">
             {tags.map((tag) => (
-              <span key={tag} className="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+              <span key={tag} className="text-[11px] text-stone-400 bg-stone-50 px-2 py-0.5 rounded-full">
                 {tag}
               </span>
             ))}
           </div>
         )}
 
-        {/* Preview names */}
+        {/* Preview names when no photos */}
         {previewPhotos.length === 0 && previewItems.length > 0 && (
           <div className="mt-2.5 space-y-1">
             {previewItems.map((item) => (
-              <p key={item.id} className="text-[12px] text-gray-500 truncate">
-                📍 {item.locationName}
+              <p key={item.id} className="text-[12px] text-stone-500 truncate flex items-center gap-1.5">
+                <svg className="w-3 h-3 text-stone-300 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C8 2 4 6 4 10c0 5.25 7 11.5 7.68 12.07a.5.5 0 0 0 .64 0C13 21.5 20 15.25 20 10c0-4-4-8-8-8z"/>
+                </svg>
+                {item.locationName}
               </p>
             ))}
           </div>

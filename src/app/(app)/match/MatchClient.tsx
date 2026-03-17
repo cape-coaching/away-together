@@ -33,18 +33,18 @@ export default function MatchClient() {
   });
 
   return (
-    <div className="flex flex-col h-full bg-gray-50/50">
+    <div className="flex flex-col h-full bg-stone-50">
       {/* Header */}
-      <header className="sticky top-0 z-10 glass border-b border-white/60 px-5 pt-5 pb-4">
+      <header className="sticky top-0 z-10 glass border-b border-stone-200/50 px-5 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-[22px] font-semibold tracking-tight text-gray-900">Matches</h1>
-            <p className="text-[13px] text-gray-400 mt-0.5 font-light">Based on your travel history</p>
+            <h1 className="text-[22px] font-bold tracking-tight text-stone-900">Matches</h1>
+            <p className="text-[13px] text-stone-400 mt-0.5">Based on your travel history</p>
           </div>
           <button
             onClick={() => load(true)}
             disabled={refreshing}
-            className="text-[13px] text-sky-500 font-medium disabled:opacity-40 active:opacity-60 transition-opacity"
+            className="text-[13px] text-rose-500 font-semibold disabled:opacity-40 active:opacity-60 transition-opacity"
           >
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
@@ -56,11 +56,7 @@ export default function MatchClient() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-medium transition-all duration-200 ${
-                filter === f
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-500 border border-gray-100"
-              }`}
+              className={`chip flex-shrink-0 ${filter === f ? "chip-active" : "chip-inactive"}`}
             >
               {f}
             </button>
@@ -78,11 +74,16 @@ export default function MatchClient() {
           </>
         ) : visible.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-              <span className="text-2xl">🤝</span>
+            <div className="w-16 h-16 rounded-3xl bg-stone-100 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-stone-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-1">No matches yet</h3>
-            <p className="text-[13px] text-gray-400 max-w-[240px] leading-relaxed">
+            <h3 className="font-semibold text-stone-800 mb-1">No matches yet</h3>
+            <p className="text-[13px] text-stone-400 max-w-[240px] leading-relaxed">
               Log more check-ins so the algorithm can find your travel twin.
             </p>
           </div>
