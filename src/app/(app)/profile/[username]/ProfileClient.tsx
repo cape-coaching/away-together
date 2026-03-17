@@ -6,21 +6,10 @@ import { CheckinCard } from "@/components/checkin/CheckinCard";
 import type { CheckinWithDetails } from "@/types";
 
 interface UserData {
-  id:             string;
-  username:       string;
-  name:           string;
-  bio:            string | null;
-  avatarUrl:      string | null;
-  isPrivate:      boolean;
-  isOwn:          boolean;
-  isFollowing:    boolean;
-  canViewContent: boolean;
-  stats: {
-    checkins:    number;
-    following:   number;
-    followers:   number;
-    itineraries: number;
-  };
+  id: string; username: string; name: string; bio: string | null;
+  avatarUrl: string | null; isPrivate: boolean; isOwn: boolean;
+  isFollowing: boolean; canViewContent: boolean;
+  stats: { checkins: number; following: number; followers: number; itineraries: number; };
 }
 
 export default function ProfileClient({ username }: { username: string }) {
@@ -49,46 +38,43 @@ export default function ProfileClient({ username }: { username: string }) {
 
   const handleFollow = async () => {
     if (!user) return;
-    const method = following ? "DELETE" : "POST";
-    await fetch(`/api/users/${user.id}/follow`, { method });
+    await fetch(`/api/users/${user.id}/follow`, { method: following ? "DELETE" : "POST" });
     setFollowing(!following);
   };
 
   if (loadingUser) return <ProfileSkeleton />;
-  if (!user)       return <div className="p-6 text-center text-gray-500">User not found</div>;
+  if (!user) return <div className="p-8 text-center text-gray-400 text-[15px]">User not found</div>;
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto pb-24">
+    <div className="flex flex-col h-full overflow-y-auto pb-24 bg-white">
       {/* Hero */}
-      <div className="bg-gradient-to-b from-sky-50 to-white px-4 pt-10 pb-6">
-        <div className="flex items-start gap-4">
-          <div className="w-20 h-20 rounded-3xl bg-sky-100 overflow-hidden flex-shrink-0">
+      <div className="px-5 pt-12 pb-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-100 to-indigo-100 overflow-hidden mb-4">
             {user.avatarUrl ? (
               <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-3xl">
+              <div className="w-full h-full flex items-center justify-center text-2xl font-semibold text-sky-600">
                 {user.name[0]}
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold text-gray-900 truncate">{user.name}</h2>
-            <p className="text-sm text-gray-500">@{user.username}</p>
-            {user.bio && <p className="text-sm text-gray-700 mt-1">{user.bio}</p>}
-          </div>
+          <h2 className="text-[20px] font-semibold text-gray-900 tracking-tight">{user.name}</h2>
+          <p className="text-[13px] text-gray-400 mt-0.5">@{user.username}</p>
+          {user.bio && <p className="text-[14px] text-gray-500 mt-2 max-w-[260px] leading-relaxed">{user.bio}</p>}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-2 mt-5">
+        <div className="grid grid-cols-4 gap-3 mt-6 bg-gray-50/70 rounded-2xl p-4">
           {[
             { label: "Check-ins",   val: user.stats.checkins },
             { label: "Following",   val: user.stats.following },
             { label: "Followers",   val: user.stats.followers },
-            { label: "Itineraries", val: user.stats.itineraries },
+            { label: "Trips",       val: user.stats.itineraries },
           ].map(({ label, val }) => (
             <div key={label} className="text-center">
-              <p className="text-lg font-bold text-gray-900">{val}</p>
-              <p className="text-[10px] text-gray-500">{label}</p>
+              <p className="text-[18px] font-semibold text-gray-900">{val}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider">{label}</p>
             </div>
           ))}
         </div>
@@ -97,10 +83,10 @@ export default function ProfileClient({ username }: { username: string }) {
         {!user.isOwn && (
           <button
             onClick={handleFollow}
-            className={`mt-4 w-full py-2.5 rounded-2xl font-medium text-sm transition-all active:scale-95 ${
+            className={`mt-5 w-full py-3 rounded-xl font-medium text-[14px] transition-all duration-200 active:scale-[0.98] ${
               following
-                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                : "bg-sky-500 text-white shadow-sm"
+                ? "bg-gray-50 text-gray-600 border border-gray-100"
+                : "bg-gray-900 text-white"
             }`}
           >
             {following ? "Following" : "Follow"}
@@ -108,17 +94,26 @@ export default function ProfileClient({ username }: { username: string }) {
         )}
       </div>
 
+      {/* Divider */}
+      <div className="h-[6px] bg-gray-50" />
+
       {/* Check-ins */}
-      <div className="px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      <div className="px-5 pt-5">
+        <h3 className="text-[13px] font-medium text-gray-400 uppercase tracking-wider mb-4">
           Check-ins
         </h3>
         {!user.canViewContent ? (
-          <PrivateAccountNotice />
+          <div className="flex flex-col items-center py-12 text-center">
+            <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center mb-3">
+              <span className="text-xl">🔒</span>
+            </div>
+            <p className="font-medium text-gray-700 text-[15px]">Private account</p>
+            <p className="text-[13px] text-gray-400 mt-1">Follow to see their check-ins</p>
+          </div>
         ) : checkins.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">No check-ins yet</p>
+          <p className="text-[14px] text-gray-300 text-center py-12">No check-ins yet</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 pb-4">
             {checkins.map((c) => (
               <CheckinCard key={c.id} checkin={c} compact />
             ))}
@@ -129,28 +124,16 @@ export default function ProfileClient({ username }: { username: string }) {
   );
 }
 
-function PrivateAccountNotice() {
-  return (
-    <div className="flex flex-col items-center py-10 text-center">
-      <span className="text-4xl mb-3">🔒</span>
-      <p className="font-medium text-gray-700">This account is private</p>
-      <p className="text-sm text-gray-400 mt-1">Follow to see their check-ins</p>
-    </div>
-  );
-}
-
 function ProfileSkeleton() {
   return (
-    <div className="p-4 space-y-4 animate-pulse">
-      <div className="flex gap-4">
-        <div className="w-20 h-20 rounded-3xl bg-gray-200" />
-        <div className="flex-1 space-y-2 pt-1">
-          <div className="h-5 bg-gray-200 rounded-full w-1/2" />
-          <div className="h-3 bg-gray-200 rounded-full w-1/3" />
-        </div>
+    <div className="p-5 pt-12 space-y-5">
+      <div className="flex flex-col items-center">
+        <div className="w-20 h-20 rounded-2xl skeleton" />
+        <div className="h-5 skeleton rounded-full w-32 mt-4" />
+        <div className="h-3 skeleton rounded-full w-20 mt-2" />
       </div>
-      <div className="grid grid-cols-4 gap-2">
-        {[1,2,3,4].map(n => <div key={n} className="h-10 bg-gray-100 rounded-xl" />)}
+      <div className="grid grid-cols-4 gap-3">
+        {[1,2,3,4].map(n => <div key={n} className="h-14 skeleton rounded-xl" />)}
       </div>
     </div>
   );

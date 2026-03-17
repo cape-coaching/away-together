@@ -6,14 +6,15 @@ import { prisma } from "@/lib/prisma";
 // POST /api/users/[username]/follow
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { username: string } }
+  { params }: { params: Promise<{ username: string }> }
 ) {
+  const { username } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const target = await prisma.user.findUnique({ where: { username: params.username }, select: { id: true } });
+  const target = await prisma.user.findUnique({ where: { username }, select: { id: true } });
   if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (target.id === session.user.id) {
     return NextResponse.json({ error: "Cannot follow yourself" }, { status: 400 });
@@ -31,14 +32,15 @@ export async function POST(
 // DELETE /api/users/[username]/follow
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { username: string } }
+  { params }: { params: Promise<{ username: string }> }
 ) {
+  const { username } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const target = await prisma.user.findUnique({ where: { username: params.username }, select: { id: true } });
+  const target = await prisma.user.findUnique({ where: { username }, select: { id: true } });
   if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   await prisma.follow.deleteMany({

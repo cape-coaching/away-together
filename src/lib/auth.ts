@@ -1,6 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
+
+const isDev = process.env.NODE_ENV === "development" || process.env.DEMO_LOGIN === "true";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -14,10 +17,38 @@ export const authOptions: NextAuthOptions = {
     //   clientId: process.env.APPLE_CLIENT_ID!,
     //   clientSecret: process.env.APPLE_CLIENT_SECRET!,
     // }),
+
+    // Dev-only demo login — bypasses OAuth for local testing
+    ...(isDev
+      ? [
+          CredentialsProvider({
+            id: "demo-login",
+            name: "Demo Login",
+            credentials: {},
+            async authorize() {
+              const user = await prisma.user.upsert({
+                where: { email: "demo@awaytogether.app" },
+                update: {},
+                create: {
+                  username: "traveler_demo",
+                  email: "demo@awaytogether.app",
+                  name: "Kevin",
+                  bio: "Collecting experiences around the world",
+                },
+              });
+              return { id: user.id, name: user.name, email: user.email };
+            },
+          }),
+        ]
+      : []),
   ],
+  session: { strategy: "jwt" },
   callbacks: {
     async signIn({ user, account }) {
       if (!user.email) return false;
+
+      // Credentials provider already handled the upsert in authorize()
+      if (account?.provider === "demo-login") return true;
 
       // Upsert user on sign-in
       await prisma.user.upsert({
@@ -32,6 +63,13 @@ export const authOptions: NextAuthOptions = {
       });
 
       return true;
+    },
+
+    async jwt({ token, user }) {
+      if (user) {
+        token.email = user.email;
+      }
+      return token;
     },
 
     async session({ session }) {

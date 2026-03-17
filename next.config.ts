@@ -8,14 +8,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" }, // dev/seed only
     ],
   },
-  // Required for mapbox-gl
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "mapbox-gl": "mapbox-gl",
-    };
-    return config;
-  },
+  // Turbopack is the default bundler in Next.js 16
+  turbopack: {},
 };
 
 export default nextConfig;

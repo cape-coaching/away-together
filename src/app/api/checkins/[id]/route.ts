@@ -14,10 +14,11 @@ const UpdateCheckinSchema = z.object({
 // GET /api/checkins/[id]
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const checkin = await prisma.checkin.findUnique({
-    where:   { id: params.id },
+    where:   { id },
     include: { location: true, user: { select: { id: true, username: true, name: true, avatarUrl: true } } },
   });
 
@@ -28,14 +29,15 @@ export async function GET(
 // PATCH /api/checkins/[id]
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const checkin = await prisma.checkin.findUnique({ where: { id: params.id } });
+  const checkin = await prisma.checkin.findUnique({ where: { id } });
   if (!checkin) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (checkin.userId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -48,7 +50,7 @@ export async function PATCH(
   }
 
   const updated = await prisma.checkin.update({
-    where:   { id: params.id },
+    where:   { id },
     data:    parsed.data,
     include: { location: true },
   });
@@ -59,19 +61,20 @@ export async function PATCH(
 // DELETE /api/checkins/[id]
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const checkin = await prisma.checkin.findUnique({ where: { id: params.id } });
+  const checkin = await prisma.checkin.findUnique({ where: { id } });
   if (!checkin) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (checkin.userId !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await prisma.checkin.delete({ where: { id: params.id } });
+  await prisma.checkin.delete({ where: { id } });
   return new NextResponse(null, { status: 204 });
 }

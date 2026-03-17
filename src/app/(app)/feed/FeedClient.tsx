@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { CheckinCard } from "@/components/checkin/CheckinCard";
+import Link from "next/link";
 import type { CheckinWithDetails } from "@/types";
 
 interface FeedClientProps {
@@ -9,12 +9,12 @@ interface FeedClientProps {
 }
 
 export default function FeedClient({ userId }: FeedClientProps) {
-  const [items, setItems]         = useState<CheckinWithDetails[]>([]);
-  const [cursor, setCursor]       = useState<string | null>(null);
-  const [hasMore, setHasMore]     = useState(true);
-  const [loading, setLoading]     = useState(false);
-  const [view, setView]           = useState<"list" | "map">("list");
-  const sentinelRef               = useRef<HTMLDivElement>(null);
+  const [items, setItems]     = useState<CheckinWithDetails[]>([]);
+  const [cursor, setCursor]   = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const containerRef          = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -32,71 +32,44 @@ export default function FeedClient({ userId }: FeedClientProps) {
     }
   }, [cursor, hasMore, loading]);
 
-  // Initial load
   useEffect(() => { loadMore(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Infinite scroll
   useEffect(() => {
-    const el = sentinelRef.current;
+    const el = containerRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) loadMore(); },
-      { rootMargin: "200px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [loadMore]);
+    const handleScroll = () => {
+      const idx = Math.round(el.scrollTop / el.clientHeight);
+      setCurrent(idx);
+      if (idx >= items.length - 3 && hasMore) loadMore();
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [items.length, hasMore, loadMore]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Feed</h1>
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-          {(["list", "map"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                view === v ? "bg-white shadow-sm text-gray-900" : "text-gray-500"
-              }`}
-            >
-              {v === "list" ? "📋" : "🗺️"}
-            </button>
-          ))}
-        </div>
-      </header>
+    <div className="h-screen w-full bg-black">
+      <div
+        ref={containerRef}
+        className="h-full w-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
+        style={{ scrollSnapType: "y mandatory" }}
+      >
+        {items.map((item, i) => (
+          <FeedCard key={item.id} checkin={item} />
+        ))}
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto pb-24">
-        {view === "list" ? (
-          <div className="divide-y divide-gray-50">
-            {items.map((item, i) => (
-              <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(i % 10) * 40}ms` }}>
-                <CheckinCard checkin={item} />
-              </div>
-            ))}
+        {loading && items.length === 0 && (
+          <div className="h-full flex items-center justify-center snap-start">
+            <div className="w-6 h-6 border-2 border-white/60 border-t-white rounded-full animate-spin" />
           </div>
-        ) : (
-          <MapPlaceholder />
         )}
 
-        {/* Infinite scroll sentinel */}
-        <div ref={sentinelRef} className="h-10 flex items-center justify-center">
-          {loading && (
-            <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
-          )}
-          {!hasMore && items.length > 0 && (
-            <p className="text-xs text-gray-400">You're all caught up ✈️</p>
-          )}
-        </div>
-
-        {/* Empty state */}
         {!loading && items.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-64 text-center px-6">
-            <span className="text-5xl mb-4">🌍</span>
-            <h3 className="font-semibold text-gray-800 mb-1">No check-ins yet</h3>
-            <p className="text-sm text-gray-500">
+          <div className="h-full flex flex-col items-center justify-center snap-start text-center px-10">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-5">
+              <span className="text-3xl">🌍</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">No check-ins yet</h3>
+            <p className="text-sm text-white/50 leading-relaxed">
               Follow other travelers or log your first check-in to get started.
             </p>
           </div>
@@ -106,11 +79,144 @@ export default function FeedClient({ userId }: FeedClientProps) {
   );
 }
 
-function MapPlaceholder() {
+/* ── Photo Carousel ─────────────────────────────────────────── */
+
+function PhotoCarousel({ photos, locationName }: { photos: string[]; locationName: string }) {
+  const [idx, setIdx] = useState(0);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const swiping = useRef(false);
+
+  const goTo = (i: number) => setIdx(Math.max(0, Math.min(photos.length - 1, i)));
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    swiping.current = false;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const dx = e.touches[0].clientX - touchStart.current.x;
+    const dy = e.touches[0].clientY - touchStart.current.y;
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      swiping.current = true;
+      e.stopPropagation();
+    }
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current || !swiping.current) { touchStart.current = null; return; }
+    const dx = e.changedTouches[0].clientX - touchStart.current.x;
+    if (dx < -40) goTo(idx + 1);
+    else if (dx > 40) goTo(idx - 1);
+    touchStart.current = null;
+    swiping.current = false;
+  };
+
+  if (photos.length === 0) {
+    return <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-600" />;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center h-64 text-center px-6 mt-8">
-      <span className="text-5xl mb-3">🗺️</span>
-      <p className="text-sm text-gray-500">Map view coming soon — requires Mapbox token in .env</p>
+    <>
+      <div
+        className="absolute inset-0"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {photos.map((url, i) => (
+          <img
+            key={i}
+            src={url}
+            alt={`${locationName} photo ${i + 1}`}
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-out"
+            style={{ opacity: i === idx ? 1 : 0 }}
+          />
+        ))}
+      </div>
+      {photos.length > 1 && (
+        <div className="absolute top-[60px] left-0 right-0 flex justify-center gap-2 z-10">
+          {photos.map((_, i) => (
+            <div
+              key={i}
+              className={`rounded-full transition-all duration-300 ${
+                i === idx
+                  ? "w-6 h-[3px] bg-white"
+                  : "w-[3px] h-[3px] bg-white/40"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ── Feed Card ──────────────────────────────────────────────── */
+
+function FeedCard({ checkin }: { checkin: CheckinWithDetails }) {
+  const { user, location, rating, reviewText, photoUrls, visitedDate, occasionTag } = checkin;
+
+  const formattedDate = new Date(visitedDate).toLocaleDateString("en-US", {
+    month: "short", day: "numeric",
+  });
+
+  return (
+    <div className="h-full w-full snap-start relative flex-shrink-0 overflow-hidden">
+      <PhotoCarousel photos={photoUrls} locationName={location.name} />
+
+      {/* Top gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent via-40% to-black/70 pointer-events-none" />
+
+      {/* User info — top */}
+      <div className="absolute top-0 left-0 right-0 pt-4 px-5 z-10">
+        <div className="flex items-center gap-3">
+          <Link href={`/profile/${user.username}`}>
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-white/30 flex-shrink-0">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-white/20 flex items-center justify-center text-xs font-semibold text-white">
+                  {user.name[0]}
+                </div>
+              )}
+            </div>
+          </Link>
+          <div className="flex-1 min-w-0">
+            <Link href={`/profile/${user.username}`}>
+              <p className="text-[13px] font-semibold text-white">{user.name}</p>
+            </Link>
+            <p className="text-[11px] text-white/50">{formattedDate}</p>
+          </div>
+          {occasionTag && (
+            <span className="text-[11px] glass-dark text-white/90 px-3 py-1 rounded-full font-medium">
+              {occasionTag}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Location + Review — bottom */}
+      <div className="absolute bottom-0 left-0 right-0 pb-[88px] px-5 z-10">
+        {/* Rating */}
+        <div className="inline-flex items-center gap-1.5 glass-dark px-3 py-1.5 rounded-full mb-3">
+          <span className="text-sm">{"★".repeat(Math.round(rating))}</span>
+          <span className="text-[13px] font-semibold text-white">{rating}</span>
+        </div>
+
+        {/* Location */}
+        <h2 className="text-[22px] font-semibold text-white leading-tight tracking-tight">
+          {location.name}
+        </h2>
+        <p className="text-[13px] text-white/60 mt-1 font-light">
+          {location.neighborhood ? `${location.neighborhood}, ` : ""}{location.city}, {location.country}
+        </p>
+
+        {/* Review */}
+        {reviewText && (
+          <p className="text-[14px] text-white/80 mt-3 leading-[1.6] font-light line-clamp-3">
+            &ldquo;{reviewText}&rdquo;
+          </p>
+        )}
+      </div>
     </div>
   );
 }

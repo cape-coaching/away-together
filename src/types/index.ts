@@ -22,6 +22,7 @@ export interface UserSummary {
 export interface LocationSummary {
   id: string;
   name: string;
+  neighborhood: string | null;
   city: string;
   country: string;
   countryCode: string;

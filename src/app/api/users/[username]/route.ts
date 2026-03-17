@@ -6,12 +6,13 @@ import { prisma } from "@/lib/prisma";
 // GET /api/users/[username]
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { username: string } }
+  { params }: { params: Promise<{ username: string }> }
 ) {
+  const { username } = await params;
   const session = await getServerSession(authOptions);
 
   const user = await prisma.user.findUnique({
-    where:  { username: params.username },
+    where:  { username },
     select: {
       id:        true,
       username:  true,
