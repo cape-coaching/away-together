@@ -8,7 +8,7 @@ export function getInstagramAuthUrl(state: string): string {
   const params = new URLSearchParams({
     client_id: APP_ID,
     redirect_uri: REDIRECT_URI,
-    scope: "instagram_business_basic,instagram_business_content_publish",
+    scope: "instagram_business_basic",
     response_type: "code",
     state,
   });
